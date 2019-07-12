@@ -1,7 +1,10 @@
 import akka.actor.ActorSystem
 import akka.testkit.{TestKit, TestProbe}
-import com.iot.Actors.Device
+import com.iot.Actors.{Device, DeviceManager}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
+import scala.concurrent.duration._
+
 
 class DeviceSpec(_system: ActorSystem) extends TestKit(_system)
   with Matchers with WordSpecLike with BeforeAndAfterAll {
@@ -51,4 +54,24 @@ class DeviceSpec(_system: ActorSystem) extends TestKit(_system)
   }
 
 
+  "reply to registration requests" in {
+    val probe = TestProbe()
+    val deviceActor = system.actorOf(Device.props("group", "device"))
+
+    deviceActor.tell(DeviceManager.RequestTrackDevice("group", "device"), probe.ref)
+    probe.expectMsg(DeviceManager.DeviceRegistered)
+    probe.lastSender should ===(deviceActor)
+  }
+
+  "ignore wrong registration requests" in {
+    val probe = TestProbe()
+    val deviceActor = system.actorOf(Device.props("group", "device"))
+
+    deviceActor.tell(DeviceManager.RequestTrackDevice("wrongGroup", "device"), probe.ref)
+    probe.expectNoMessage(500.milliseconds)
+
+
+    deviceActor.tell(DeviceManager.RequestTrackDevice("group", "WrongdeviceId"), probe.ref)
+    probe.expectNoMessage(500.milliseconds)
+  }
 }

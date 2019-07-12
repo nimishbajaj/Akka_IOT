@@ -1,6 +1,7 @@
 package com.iot
 
 import akka.actor.ActorSystem
+import com.iot.Actors.IotSupervisor
 
 import scala.io.StdIn
 
